@@ -2,6 +2,8 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import Landing from "./pages/Landing";
 import OrphanagesMap from "./pages/OrphanagesMap";
+import Orphanage from "./pages/Orphanage";
+import CreateOrphanage from "./pages/CreateOrphanage";
 
 export default function Routes() {
   const router = createBrowserRouter([
@@ -10,8 +12,16 @@ export default function Routes() {
       element: <Landing />,
     },
     {
-      path: "/app",
+      path: "/orphanages",
       element: <OrphanagesMap />,
+    },
+    {
+      path: "/orphanages/create",
+      element: <CreateOrphanage />,
+    },
+    {
+      path: "/orphanages/:id",
+      element: <Orphanage />,
     },
   ]);
 

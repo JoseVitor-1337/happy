@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import * as yup from "yup";
+import { Images } from "../../database/entities/Images";
+import { Orphanages } from "../../database/entities/Orphanages";
 
 import { orphanagesRepository } from "../../database/repositories/orphanages";
 import orphanageView from "../../views/orphanages";
@@ -29,9 +31,9 @@ export default {
   },
 
   async show(request: Request, response: Response) {
-    try {
-      const id = Number(request.params?.id || 0);
+    const id = Number(request.params?.id || 0);
 
+    try {
       const orphanage = await orphanagesRepository.findOne({
         where: { id },
         relations: ["images"],
@@ -47,6 +49,31 @@ export default {
       return response.json({
         success: false,
         message: "Orfanato não encontrado",
+      });
+    }
+  },
+
+  async delete(request: Request, response: Response) {
+    try {
+      await orphanagesRepository
+        .createQueryBuilder()
+        .delete()
+        .from(Images)
+        .execute();
+
+      await orphanagesRepository
+        .createQueryBuilder()
+        .delete()
+        .from(Orphanages)
+        .execute();
+
+      return response.json({
+        success: true,
+      });
+    } catch (error) {
+      console.log("error", error);
+      return response.json({
+        success: false,
       });
     }
   },
