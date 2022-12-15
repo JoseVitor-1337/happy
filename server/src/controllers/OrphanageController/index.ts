@@ -121,7 +121,7 @@ export default {
       about,
       instructions,
       opening_hours,
-      open_on_weekands,
+      open_on_weekands: open_on_weekands === "true",
       images,
     };
 

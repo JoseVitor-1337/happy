@@ -1,23 +1,108 @@
+import { FormEvent, ChangeEvent, useMemo, useState } from "react";
 import { FiPlus } from "react-icons/fi";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
+import { useNavigate } from "react-router-dom";
+import { LeafletMouseEvent } from "leaflet";
 
-import { Sidebar } from "../../components";
+import { Sidebar, Textarea, Input } from "../../components";
 import getMapIcon from "../../utils/getMapIcon";
+import useMapOnClick from "./hooks/useMapOnClick";
+import useGetUserInitialCoordinates from "./hooks/useGetUserInitialCoordinates";
+import api from "../../services/api";
 
 import "./style.css";
 
+type ICoordinates = {
+  latitude: number;
+  longitude: number;
+};
+
 export default function CreateOrphanage() {
+  const navigate = useNavigate();
+
+  const [openOnWeekands, setOpenOnWeekands] = useState<boolean>(true);
+  const [coordinates, setCoordinates] = useState<ICoordinates>();
+  const [images, setImages] = useState<File[]>([]);
+  const [formValues, setFormValues] = useState({
+    name: "",
+    about: "",
+    instructions: "",
+    opening_hours: "",
+  });
+
+  const previewImaes = useMemo(() => {
+    return images.map((image) => {
+      return URL.createObjectURL(image);
+    });
+  }, [images]);
+
+  function onChangeInput(event: ChangeEvent<HTMLInputElement>) {
+    const { name, value } = event.target;
+    setFormValues({ ...formValues, [name]: value });
+  }
+
+  function onChangeTextarea(event: ChangeEvent<HTMLTextAreaElement>) {
+    const { name, value } = event.target;
+    setFormValues({ ...formValues, [name]: value });
+  }
+
+  function handleSetCoordinates(event: LeafletMouseEvent) {
+    const { lat, lng } = event.latlng;
+
+    setCoordinates({ latitude: lat, longitude: lng });
+  }
+
+  function handleonChangeInputFile(event: ChangeEvent<HTMLInputElement>) {
+    if (!event.target.files) return;
+
+    setImages(Array.from(event.target.files));
+  }
+
+  const { setMapRef } = useMapOnClick(handleSetCoordinates);
+  useGetUserInitialCoordinates((latitude, longitude) => {
+    setCoordinates({ latitude, longitude });
+  });
+
+  async function handleOnSubmit(event: FormEvent) {
+    event.preventDefault();
+
+    const data = new FormData();
+
+    const orphanage = {
+      ...formValues,
+      ...coordinates,
+      open_on_weekands: openOnWeekands,
+    };
+
+    Object.entries(orphanage).map(([key, value]) => {
+      data.append(key, value as string);
+    });
+
+    images.forEach((image) => {
+      data.append("images", image);
+    });
+
+    await api.post("orphanages", data);
+
+    alert("Cadastro realizado com sucesso!");
+
+    navigate("/orphanages");
+  }
+
+  if (!coordinates) return null;
+
   return (
     <div id="page-create-orphanage">
       <Sidebar />
 
       <main>
-        <form className="create-orphanage-form">
+        <form className="create-orphanage-form" onSubmit={handleOnSubmit}>
           <fieldset>
             <legend>Dados</legend>
 
             <MapContainer
-              center={[2.8337552, -60.7098284]}
+              ref={(ref) => setMapRef(ref)}
+              center={[coordinates.latitude, coordinates.longitude]}
               zoom={15}
               style={{ width: "100%", height: 200 }}
             >
@@ -25,57 +110,92 @@ export default function CreateOrphanage() {
                 url={`https://api.mapbox.com/styles/v1/mapbox/dark-v10/tiles/256/{z}/{x}/{y}@2x?access_token=${process.env.REACT_APP_MAPBOX_API}`}
               />
 
-              <Marker
-                interactive={false}
-                icon={getMapIcon()}
-                position={[2.8337552, -60.7098284]}
-              />
+              {coordinates.latitude !== 0 && (
+                <Marker
+                  interactive={false}
+                  icon={getMapIcon()}
+                  position={[coordinates.latitude, coordinates.longitude]}
+                />
+              )}
             </MapContainer>
 
-            <div className="input-block">
-              <label htmlFor="name">Nome</label>
-              <input type="text" name="name" id="name" />
-            </div>
+            <Input
+              label="Nome"
+              name="name"
+              id="name"
+              value={formValues.name}
+              onChange={onChangeInput}
+            />
 
-            <div className="input-block">
-              <label htmlFor="about">
-                Sobre <span>Máximo de 300 caractéres</span>
-              </label>
-              <textarea name="about" id="about" />
-            </div>
+            <Textarea
+              label="Sobre"
+              name="about"
+              id="about"
+              value={formValues.about}
+              onChange={onChangeTextarea}
+            />
 
             <div className="input-block images-container">
               <label htmlFor="images">Fotos</label>
 
-              <div className="uploaded-image"></div>
+              <div className="images-container">
+                {previewImaes.map((preview) => (
+                  <img key={preview} src={preview} alt="Preview da imagem" />
+                ))}
 
-              <button className="new-image">
-                <FiPlus size={24} color="#15b6D6" />
-              </button>
+                <label htmlFor="image[]" className="new-image">
+                  <FiPlus size={24} color="#15b6D6" />
+                </label>
+
+                <input
+                  multiple
+                  type="file"
+                  name="image"
+                  id="image[]"
+                  onChange={handleonChangeInputFile}
+                />
+              </div>
             </div>
           </fieldset>
 
           <fieldset>
             <legend>Visitação</legend>
 
-            <div className="input-block">
-              <label htmlFor="instructions">Instruções</label>
-              <textarea name="instructions" id="instructions" />
-            </div>
+            <Textarea
+              label="Instruções"
+              name="instructions"
+              id="instructions"
+              value={formValues.instructions}
+              onChange={onChangeTextarea}
+            />
 
-            <div className="input-block">
-              <label htmlFor="opening_hours">Horário de atendimento</label>
-              <input type="text" name="opening_hours" id="opening_hours" />
-            </div>
+            <Input
+              label="Horário de atendimento"
+              type="text"
+              name="opening_hours"
+              id="opening_hours"
+              value={formValues.opening_hours}
+              onChange={onChangeInput}
+            />
 
             <div className="input-block">
               <label htmlFor="open_on_weekands">Atende fim de semana?</label>
 
               <div className="button-select">
-                <button type="button" className="active">
+                <button
+                  type="button"
+                  className={openOnWeekands ? "active" : ""}
+                  onClick={() => setOpenOnWeekands(true)}
+                >
                   Sim
                 </button>
-                <button type="button">Não</button>
+                <button
+                  type="button"
+                  className={!openOnWeekands ? "active" : ""}
+                  onClick={() => setOpenOnWeekands(false)}
+                >
+                  Não
+                </button>
               </div>
             </div>
           </fieldset>

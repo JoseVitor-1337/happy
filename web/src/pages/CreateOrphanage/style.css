@@ -91,7 +91,6 @@ form.create-orphanage-form .input-block .images-container {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   grid-gap: 16px;
-  background-color: red;
 }
 
 form.create-orphanage-form .input-block .images-container img {
