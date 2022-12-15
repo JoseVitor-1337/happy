@@ -33,7 +33,7 @@ export default function OrphanagesMap() {
         style={{ width: "100%", height: "100%" }}
       >
         <TileLayer
-          url={`https://api.mapbox.com/styles/v1/mapbox/dark-v10/tiles/256/{z}/{x}/{y}@2x?access_token=${process.env.REACT_APP_MAPBOX_API}`}
+          url={`https://api.mapbox.com/styles/v1/mapbox/light-v10/tiles/256/{z}/{x}/{y}@2x?access_token=${process.env.REACT_APP_MAPBOX_API}`}
         />
         {orphanages.map((orphanage) => (
           <Marker
