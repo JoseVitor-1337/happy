@@ -1,4 +1,4 @@
-import { FormEvent, ChangeEvent, useMemo, useState } from "react";
+import { FormEvent, ChangeEvent, useMemo, useState, useCallback } from "react";
 import { FiPlus } from "react-icons/fi";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import { useNavigate } from "react-router-dom";
@@ -55,13 +55,22 @@ export default function CreateOrphanage() {
   function handleonChangeInputFile(event: ChangeEvent<HTMLInputElement>) {
     if (!event.target.files) return;
 
-    setImages(Array.from(event.target.files));
+    const newImages = Array.from(event.target.files);
+
+    setImages((oldImages) => {
+      return [...newImages, ...oldImages];
+    });
   }
 
+  const getInitialPosition = useCallback(
+    (latitude: number, longitude: number) => {
+      setCoordinates({ latitude, longitude });
+    },
+    []
+  );
+
   const { setMapRef } = useMapOnClick(handleSetCoordinates);
-  useGetUserInitialCoordinates((latitude, longitude) => {
-    setCoordinates({ latitude, longitude });
-  });
+  useGetUserInitialCoordinates(getInitialPosition);
 
   async function handleOnSubmit(event: FormEvent) {
     event.preventDefault();
@@ -74,7 +83,7 @@ export default function CreateOrphanage() {
       open_on_weekands: openOnWeekands,
     };
 
-    Object.entries(orphanage).map(([key, value]) => {
+    Object.entries(orphanage).forEach(([key, value]) => {
       data.append(key, value as string);
     });
 
