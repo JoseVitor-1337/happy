@@ -25,7 +25,7 @@ export default function useOrphanages(): IUseOrphanagesProps {
           alert("Erro ao listar os orfanatos");
         }
       })
-      .catch((error) => {
+      .catch(() => {
         alert("Erro ao listar os orfanatos");
       });
   }, []);
