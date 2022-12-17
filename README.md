@@ -1,4 +1,4 @@
-# happy
+# Happy
 
 ### An application developed by **Rocketseat** where you can create and list orphanages to visit and help children whenever you want!
 
