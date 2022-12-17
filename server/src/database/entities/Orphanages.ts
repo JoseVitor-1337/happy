@@ -31,7 +31,7 @@ export class Orphanages {
   longitude: string;
 
   @Column({ type: "boolean", default: false })
-  open_on_weekands: string;
+  open_on_weekands: boolean;
 
   @OneToMany(() => Images, (image) => image.orphanages, {
     cascade: ["insert", "remove", "update"],

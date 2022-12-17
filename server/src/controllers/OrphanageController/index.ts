@@ -133,6 +133,6 @@ export default {
 
     await orphanagesRepository.save(orphanage);
 
-    return response.json({ orphanage });
+    return response.json({ success: true, orphanage });
   },
 };

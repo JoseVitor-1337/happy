@@ -9,17 +9,40 @@ type ICoordinates = {
   longitudeDelta: number;
 };
 
+type IUserPermission = "granted" | "undetermined" | "denied" | "access_granted";
+
 export default function useGetUserCurrentLocation() {
   const [coordinates, setCoordinates] = useState<ICoordinates | undefined>();
+  const [loadingCoordinates, setLoadingCoordinates] = useState(true);
+  const [userPermission, setUserPermission] =
+    useState<IUserPermission>("denied");
 
   useEffect(() => {
     async function loadAsyncFunction() {
       let { status } = await Location.requestForegroundPermissionsAsync();
 
-      if (status !== "granted") {
-        Alert.alert("Permissão para acessar sua localidade fou negada.");
-      } else {
-        let location = await Location.getCurrentPositionAsync({});
+      if (status === "denied") {
+        Alert.alert(
+          "Você não deu permissão para accessar sua localidade no mapa."
+        );
+      }
+
+      setUserPermission(status);
+    }
+
+    loadAsyncFunction();
+  }, []);
+
+  useEffect(() => {
+    async function loadAsyncFunction() {
+      setUserPermission("access_granted");
+
+      try {
+        let location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Highest,
+          distanceInterval: 100000,
+        });
+
         const { latitude, longitude } = location.coords;
 
         setCoordinates({
@@ -28,11 +51,15 @@ export default function useGetUserCurrentLocation() {
           latitudeDelta: 0.008,
           longitudeDelta: 0.008,
         });
+      } catch (error) {
+        console.error("error", error);
       }
+
+      setLoadingCoordinates(false);
     }
 
-    loadAsyncFunction();
-  }, []);
+    if (userPermission !== "denied") loadAsyncFunction();
+  }, [userPermission]);
 
-  return { coordinates };
+  return { coordinates, loadingCoordinates };
 }

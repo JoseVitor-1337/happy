@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import api from "../../../../services/api";
 
 export type IPartialOrphanage = {
@@ -15,7 +16,7 @@ type IUseOrphanagesProps = {
 export default function useOrphanages(): IUseOrphanagesProps {
   const [orphanages, setOrphanages] = useState<IPartialOrphanage[]>([]);
 
-  useEffect(() => {
+  useFocusEffect(() => {
     api
       .get("/orphanages")
       .then((response) => {
@@ -28,7 +29,7 @@ export default function useOrphanages(): IUseOrphanagesProps {
       .catch(() => {
         alert("Erro ao listar os orfanatos");
       });
-  }, []);
+  });
 
   return { orphanages };
 }
